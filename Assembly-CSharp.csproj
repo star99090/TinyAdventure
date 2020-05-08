@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\EnemyMove.cs" />
+    <Compile Include="Assets\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\PlayerMove.cs" />
     <Reference Include="Unity.Timeline.Editor">
       <HintPath>C:/Users/user/Desktop/UnityWork/TinyAdventure/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>

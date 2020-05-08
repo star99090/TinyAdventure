@@ -6,16 +6,30 @@ public class PlayerMove : MonoBehaviour
 {
     public float maxSpeed;
     public float jumpPower;
+    public GameManager gameManager;
+
+    public AudioClip audioJump;
+    public AudioClip audioAttack;
+    public AudioClip audioDamaged;
+    public AudioClip audioItem;
+    public AudioClip audioDie;
+    public AudioClip audioFinish
+        ;
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
+    CapsuleCollider2D capsuleCollider;
     Animator ani;
-
+    AudioSource audioSource;
+    
     void Awake()
     {
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         ani = GetComponent<Animator>();
+        capsuleCollider = GetComponent<CapsuleCollider2D>();
+        audioSource = GetComponent<AudioSource>();
     }
+
     //Rigidbody2D에 z축 얼리는게 있는데 그거 해줘야 캐릭터가 안굴러간다
     void Update() // 단발적인, 한 번의 키 입력은 Update()
     {
@@ -34,6 +48,7 @@ public class PlayerMove : MonoBehaviour
         {
             rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
             ani.SetBool("isJumping", true);
+            PlaySound("Jump");
         }
         
         //방향전환
@@ -78,6 +93,32 @@ public class PlayerMove : MonoBehaviour
             }
         } 
     }
+
+    //아이템 먹는 효과
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.gameObject.tag == "Item")
+        {
+            bool isBronze = collision.gameObject.name.Contains("Bronze");
+            bool isSilver = collision.gameObject.name.Contains("Silver");
+            bool isGold = collision.gameObject.name.Contains("Gold");
+
+            if (isBronze)
+                gameManager.stagePoint += 100;
+            else if (isSilver)
+                gameManager.stagePoint += 200;
+            else if (isGold)
+                gameManager.stagePoint += 300;
+            collision.gameObject.SetActive(false);
+            PlaySound("Item");
+        }
+        else if(collision.gameObject.tag == "Finish")
+        {
+            PlaySound("Finish");
+            gameManager.NextStage();
+        }
+    }
+
     //충돌 효과는 OnCollisionEnter
     void OnCollisionEnter2D(Collision2D collision)
     {
@@ -86,6 +127,7 @@ public class PlayerMove : MonoBehaviour
             //몬스터를 위에서 밟았을 때, Attack
             if(rigid.velocity.y < 0 && collision.transform.position.y < transform.position.y)
             {
+                gameManager.stagePoint += 100;
                 OnAttack(collision.transform);
             }
             else
@@ -102,9 +144,13 @@ public class PlayerMove : MonoBehaviour
         //몬스터 데미지 리액션
         EnemyMove enemyMove = enemy.GetComponent<EnemyMove>();
         enemyMove.OnDamaged();
+        PlaySound("Attack");
     }
     void OnDamaged(Vector2 targetPos)
     {
+        //HP 감소
+        gameManager.hpDown();
+
         //맞으면 데미지 맞은 레이어로 이동
         gameObject.layer = 11;
 
@@ -127,5 +173,38 @@ public class PlayerMove : MonoBehaviour
         gameObject.layer = 10;
 
         spriteRenderer.color = new Color(1, 1, 1, 1);
+    }
+
+    public void OnDie()
+    {
+        spriteRenderer.color = new Color(1, 1, 1, 0.4f); // 피격시 색상 변화
+        spriteRenderer.flipY = true; // 뒤집어주기(배까고 죽음)
+        capsuleCollider.enabled = false; // 콜라이더를 비활성화
+        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse); // 맞으면 점프하며 아파함
+    }
+
+    public void velocityZero()
+    {
+        rigid.velocity = Vector2.zero;
+    }
+
+    public void PlaySound(string action)
+    {
+        switch (action)
+        {
+            case "Jump":
+                audioSource.clip = audioJump; break;
+            case "Attack":
+                audioSource.clip = audioAttack; break;
+            case "Damaged":
+                audioSource.clip = audioDamaged; break;
+            case "Item":
+                audioSource.clip = audioItem; break;
+            case "Die":
+                audioSource.clip = audioDie; break;
+            case "Finish":
+                audioSource.clip = audioFinish; break;
+        }
+        audioSource.Play();
     }
 }
