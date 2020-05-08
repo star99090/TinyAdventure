@@ -8,12 +8,14 @@ public class EnemyMove : MonoBehaviour
     Rigidbody2D rigid;
     public int nextAction;
     SpriteRenderer spriteRenderer;
+    CapsuleCollider2D capsuleCollider;
 
     void Awake()
     {
         ani = GetComponent<Animator>();
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        capsuleCollider = GetComponent<CapsuleCollider2D>();
 
         //Invoke() : 주어진 시간이 지난 뒤, 지정된 함수를 실행하는 함수
         Invoke("Think", 0.5f);
@@ -51,4 +53,17 @@ public class EnemyMove : MonoBehaviour
         Invoke("Think", nextThinkTime); // 재귀함수로 구현하여 계속 랜덤 값을 적용하도록 구현!
     }
 
+    public void OnDamaged()
+    {
+        spriteRenderer.color = new Color(1, 1, 1, 0.4f); // 피격시 색상 변화
+        spriteRenderer.flipY = true; // 뒤집어주기(배까고 죽음)
+        capsuleCollider.enabled = false; // 콜라이더를 비활성화
+        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse); // 맞으면 점프하며 아파함
+        Invoke("DeActive", 3); // 3초 뒤 DeActive 실행
+    }
+
+    void DeActive()
+    {
+        gameObject.SetActive(false);
+    }
 }

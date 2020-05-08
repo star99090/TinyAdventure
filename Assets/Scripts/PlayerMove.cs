@@ -37,7 +37,7 @@ public class PlayerMove : MonoBehaviour
         }
         
         //방향전환
-        if (Input.GetButtonDown("Horizontal"))
+        if (Input.GetButton("Horizontal"))
         {
             spriteRenderer.flipX = Input.GetAxisRaw("Horizontal") == -1;
         }
@@ -83,11 +83,26 @@ public class PlayerMove : MonoBehaviour
     {
         if(collision.gameObject.tag == "Enemy")
         {
-            OnDamaged(collision.transform.position);
+            //몬스터를 위에서 밟았을 때, Attack
+            if(rigid.velocity.y < 0 && collision.transform.position.y < transform.position.y)
+            {
+                OnAttack(collision.transform);
+            }
+            else
+                OnDamaged(collision.transform.position);
         }
         
     }
+    
+    void OnAttack(Transform enemy)
+    {
+        //내 캐릭터 리액션
+        rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
 
+        //몬스터 데미지 리액션
+        EnemyMove enemyMove = enemy.GetComponent<EnemyMove>();
+        enemyMove.OnDamaged();
+    }
     void OnDamaged(Vector2 targetPos)
     {
         //맞으면 데미지 맞은 레이어로 이동
